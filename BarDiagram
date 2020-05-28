@@ -1,0 +1,33 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+frequencies = [62188, 25094, 11573]
+freq_series = pd.Series(frequencies)
+x_labels = ['JNECare', 'Jntexpressid', 'PosIndonesia']
+
+plt.figure(figsize=(12, 8))
+ax = freq_series.plot(kind='bar')
+ax.set_title('Amount Frequency')
+ax.set_xlabel('Amount ($)')
+ax.set_ylabel('Frequency')
+ax.set_xticklabels(x_labels)
+
+def add_value_labels(ax, spacing=5):
+    for rect in ax.patches:
+        y_value = rect.get_height()
+        x_value = rect.get_x() + rect.get_width() / 2
+        space = spacing
+        va = 'bottom'
+        va = 'top'
+        label = "{:.1f}".format(y_value)
+        
+        ax.annotate(
+            label,                      
+            (x_value, y_value),         
+            xytext=(0, space),          
+            textcoords="offset points", 
+            ha='center',                
+            va=va)                                                                          
+add_value_labels(ax)        
+plt.savefig("jumlah tweet1.png")             
