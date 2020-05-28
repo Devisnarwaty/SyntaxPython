@@ -1,0 +1,125 @@
+from sklearn import metrics
+from sklearn.metrics import pairwise_distances
+from sklearn import datasets
+import pandas as pd
+
+X = pd.read_csv("C://TFIDFPOSFIXNEW.csv")
+
+#Nilai CHI
+import numpy as np
+from sklearn.cluster import KMeans
+kmeans_model = KMeans(n_clusters=3, random_state=1).fit(X)
+labels = kmeans_model.labels_
+metrics.calinski_harabaz_score(X, labels)
+for k in range(2, 21):
+    kmeans_model = KMeans(n_clusters=k, random_state=1).fit(X)
+    labels = kmeans_model.labels_
+    print(k, metrics.calinski_harabaz_score(X, labels))
+
+#Nilai Silhouette
+from sklearn.cluster import KMeans
+from sklearn import metrics
+from sklearn.metrics import silhouette_score
+from sklearn.metrics import pairwise_distances
+
+kmeans_model = KMeans(n_clusters=3, random_state=1).fit(X)
+labels = kmeans_model.labels_
+
+for k in range(2,21):
+    kmeans = KMeans(n_clusters = k, random_state=1).fit(X)
+    label = kmeans.labels_
+    sil_coeff = silhouette_score(X, label, metric='euclidean')
+    print(k, sil_coeff)
+
+# Word Cloud Every Cluster
+import csv
+input_df=pd.DataFrame(data=X)
+matrix = pd.read_csv("C:/USERS/ASUS/DOWNLOADS/DATA BARU_1/DATAJNEFIX1.csv")
+
+from sklearn.externals import joblib
+num_clusters = 2
+km = KMeans(n_clusters = num_clusters, random_state=1)
+%time km.fit(matrix)
+clusters = km.labels_.tolist()
+y_kmeans = km.predict(matrix)
+input_df['klaster']=pd.Series(y_kmeans, index=input_df.index)
+
+from sklearn.externals import joblib
+joblib.dump(km, 'doc_cluster.pkl')
+km = joblib.load('doc_cluster.pkl')
+clusters = km.labels_.tolist()
+clusters_df = pd.DataFrame(clusters)
+clusters_df['klaster'] = pd.DataFrame(clusters)
+clusters_df['klaster'].value_counts()
+
+import csv
+train_final=pd.read_csv("C:/USERS/ASUS/Downloads/DATAJNTFIX.csv")
+train_final_df.columns = ['text']
+train_final_df['klaster']=pd.Series(y_kmeans, index=input_df.index)
+devi = pd.DataFrame(train_final)
+putri = pd.DataFrame(train_final_df['klaster'], columns=['class'])
+gabungan = pd.concat([devi, putri], axis=1)
+print(train_final)
+
+cluster1 = gabungan[gabungan['class'] == 1 ]
+cluster1 = cluster1['text']
+cluster2 = gabungan[gabungan['class'] == 0 ]
+cluster2 = cluster2['text']
+
+a = []
+b = []
+for l in b:
+    a+= l
+final={v: a.count(v) for v in set(a)}
+
+c = []
+d = []
+for l in d:
+    c+= l
+final={v: c.count(v) for v in set(c)}
+
+datastr1 = str(cluster1)
+datagab1 = re.sub(r"'","", datastr1)
+datastr2 = str(cluster2)
+datagab2 = re.sub(r"'","", datastr2)
+
+import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+get_ipython().run_line_magic('matplotlib', 'inline')
+from subprocess import check_output
+from wordcloud import WordCloud, STOPWORDS
+mpl.rcParams['font.size']=12 #10
+mpl.rcParams['savefig.dpi']=100 #72
+mpl.rcParams['figure.subplot.bottom']=.1
+stopwords=open('D://stopword.txt', 'r').read()
+
+#Word Cloud Cluster 1
+wordcloud = WordCloud(collocations = False,
+                     background_color='white',
+                     stopwords=stopwords,
+                     max_words=50,
+                     max_font_size=500,
+                     random_state=42
+                     ).generate(datagab1)
+print(wordcloud)
+fig = plt.figure(1)
+plt.imshow(wordcloud)
+plt.axis('off')
+plt.show()
+fig.savefig("D:/Cluster 1 JNE.png", dpi=900)
+
+# Word Cloud Cluster 2
+wordcloud = WordCloud(collocations = False,
+                     background_color='white',
+                     stopwords=stopwords,
+                     max_words=50,
+                     max_font_size=200,
+                     random_state=42
+                     ).generate(datagab2)
+print(wordcloud)
+fig = plt.figure(1)
+plt.imshow(wordcloud)
+plt.axis('off')
+plt.show()
+fig.savefig("D:/Cluster 2 JNE.png", dpi=900) 
