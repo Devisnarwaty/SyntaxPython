@@ -1,0 +1,148 @@
+import pandas as pd
+import re
+import nltk
+import sys
+import string
+from nltk.tokenize import word_tokenize
+from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+data = pd.read_excel("D://DATA FIX.xlsx")
+text = data['TWEET FULL']
+
+#Menghapus link
+dataclearlink = []
+for line in text:
+  result = re.sub(r"http\S+"," ", line)
+  dataclearlink.append(result)
+  print(result)
+
+#Menghapus Hastag
+dataclearhastag = []
+for line in dataclearlink :
+  result = re.sub(r"#\S+", " ", line)
+  dataclearhastag.append(result)
+  print(result)
+
+#Menghapus Simbol Retweet (RT)
+dataclearrt = []
+for line in dataclearhastag:
+  result = re.sub(r"RT", " ", line)
+  dataclearrt.append(result)
+  print(result)
+ 
+#Menghapus Username
+dataclearusername = []
+for line in dataclearrt:
+  result = re.sub(r"@\S+", " ", line)
+  dataclearusername.append(result)
+  print(result)
+
+#Menghapus angka
+dataclearangka = []
+for line in dataclearusername :
+  result = re.sub("\d", " ", line)
+  dataclearangka.append(result)
+  print(result)
+
+#Menghapus emoticon
+dataclearemoticon = []
+for line in dataclearangka :
+  result = re.sub(r'<.*?>', " ", line)
+  dataclearemoticon.append(result)
+  print(result)
+
+#Menghapus baris baru
+dataclearline = []
+for line in dataclearemoticon :
+  result = re.sub("\n", " ", line)
+  dataclearline.append(result)
+  print(result)
+
+#Menghapus punctuation
+dataclearpunctuation = []
+for line in dataclearline :
+  result = re.sub(r"[^\w\s]", " ", line)
+  dataclearpunctuation.append(result)
+  print(result)
+
+#Menghapus spasi berlebih
+datacleardoublespace = []
+for line in dataclearpunctuation :
+  result=re.sub(r'\s+', ' ', line)
+  datacleardoublespace.append(result)
+  print(result)
+
+#Menghapus Underscore
+dataclearunderscore = []
+for line in datacleardoublespace :
+  result = re.sub(r"\S+_", " ", line)
+  dataclearunderscore.append(result)
+  print(result)
+
+#Case Folding
+datalower = []
+for line in dataclearunderscore:
+  result = line.lower()
+  datalower.append(result)
+  print(result)
+
+#Stemming
+factory = StemmerFactory()
+stemmer = factory.create_stemmer()
+data_stemmed = map(lambda x: stemmer.stem(x), datalower)
+datastemmed = list(data_stemmed)
+
+#Replace Kata
+kata ={ "lampir":"lampiran", "ttp":"tetap", "milu":"pemilu", "langgan":"langganan", "layan":"layanan", "lapor":"laporan", "duit":"uang", "perhati":"perhatian", "pket":"paket", "trims": "terima kasih", "tq":"terima kasih", "simpen":"status", "thx": "terima kasih", "stts":"status", "tlpon":"telepon", "sttus":"status"}
+from collections import OrderedDict 
+def replace_all(text, dic):
+    for i,j in dic.items():
+        text = text.replace(i,j)
+    return text
+dic = OrderedDict(kata)
+
+datachange = []
+for line in datastemmed:
+    result = replace_all(line, dic)
+    datachange.append(result)
+    print(result)
+
+#Stopword dan tokenizing
+stopwords=open('D://stopword.txt', 'r').read()
+datafinal=[]
+for line in datachange:
+   word_token=nltk.word_tokenize(line)
+   word_token=[word for word in word_token if not word in stopwords and not word[0].isdigit()]
+   datafinal.append(" ".join(word_token))
+
+#Count Vectorizer
+vectorizer = CountVectorizer(min_df=10)
+JNT = vectorizer.fit_transform(datafinal)
+JNT_ = pd.DataFrame(JNT.toarray(),
+                    columns=vectorizer.get_feature_names())
+JNT_.to_csv("JNTCVCLEAR1.csv")
+
+#TF-IDF
+vectorizer = TfidfVectorizer(min_df=10)
+TFIDF = vectorizer.fit_transform(datafinal)
+TFIDFJNT=pd.DataFrame(TFIDF.toarray(),columns=vectorizer.get_feature_names())
+TFIDFJNT.to_csv('TFIDFJNTFIXCLEAR1.csv')
+
+#Count Vectorizer BIGRAM
+vectorizer = CountVectorizer(min_df=10, ngram_range=(2,2))
+JNT_BG = vectorizer.fit_transform(datafinal)
+term = vectorizer.get_feature_names()
+term1 = [word.replace('','_') for word in term]
+JNT_BG_=pd.DataFrame(JNT_BG.toarray(), columns=term1)
+JNT_BG_.to_csv("JNT_BGCLEAR1.csv")
+
+#TF-IDF BIGRAM
+vectorizer = TfidfVectorizer(min_df=10, ngram_range=(2,2))
+TFIDF_BG = vectorizer.fit_transform(datafinal)
+term = vectorizer.get_feature_names()
+term1 = [word.replace('','_') for word in term]
+TFIDF_BG_ = pd.DataFrame(TFIDF_BG.toarray(),
+                        columns = term1)
+TFIDF_BG_.to_csv("TFIDFJNT_BGCLEAR.csv")
